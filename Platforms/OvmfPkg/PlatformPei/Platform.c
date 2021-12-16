@@ -706,6 +706,10 @@ InitializePlatform (
   Settings = (MEMORY_PROTECTION_SETTINGS) MEMORY_PROTECTION_SETTINGS_DEBUG;
   Settings.HeapGuardPolicy.Fields.SmmPageGuard = 0;
   Settings.HeapGuardPolicy.Fields.SmmPoolGuard = 0;
+  Settings.ImageProtectionPolicy.Fields.FromUnknown = 1;
+  Settings.DxeNxProtectionPolicy.Fields.EfiLoaderCode = 1;
+  Settings.DxeNxProtectionPolicy.Fields.EfiBootServicesCode = 1;
+  Settings.DxeNxProtectionPolicy.Fields.EfiRuntimeServicesCode = 1;
   
   BuildGuidDataHob (
     &gMemoryProtectionSettingsGuid,
