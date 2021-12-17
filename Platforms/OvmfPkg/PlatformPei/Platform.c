@@ -708,8 +708,6 @@ InitializePlatform (
   Settings.HeapGuardPolicy.Fields.SmmPoolGuard = 0;
   Settings.ImageProtectionPolicy.Fields.FromUnknown = 1;
   Settings.DxeNxProtectionPolicy.Fields.EfiLoaderCode = 1;
-  Settings.DxeNxProtectionPolicy.Fields.EfiBootServicesCode = 1;
-  Settings.DxeNxProtectionPolicy.Fields.EfiRuntimeServicesCode = 1;
   
   BuildGuidDataHob (
     &gMemoryProtectionSettingsGuid,
