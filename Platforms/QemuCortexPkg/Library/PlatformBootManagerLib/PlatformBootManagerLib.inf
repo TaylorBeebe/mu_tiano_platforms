@@ -32,7 +32,7 @@
   ArmVirtPkg/ArmVirtPkg.dec
   MdeModulePkg/MdeModulePkg.dec
   MdePkg/MdePkg.dec
-  OvmfPkg/OvmfPkg.dec
+  QemuQ35Pkg/QemuQ35Pkg.dec
   MsCorePkg/MsCorePkg.dec
   SecurityPkg/SecurityPkg.dec
   ShellPkg/ShellPkg.dec

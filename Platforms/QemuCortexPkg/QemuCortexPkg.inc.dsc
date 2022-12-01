@@ -142,15 +142,15 @@
 
   # PCI Libraries
   PciLib|MdePkg/Library/BasePciLibPciExpress/BasePciLibPciExpress.inf
-  PciExpressLib|OvmfPkg/Library/BaseCachingPciExpressLib/BaseCachingPciExpressLib.inf
-  PciCapLib|OvmfPkg/Library/BasePciCapLib/BasePciCapLib.inf
-  PciCapPciSegmentLib|OvmfPkg/Library/BasePciCapPciSegmentLib/BasePciCapPciSegmentLib.inf
-  PciCapPciIoLib|OvmfPkg/Library/UefiPciCapPciIoLib/UefiPciCapPciIoLib.inf
+  PciExpressLib|QemuCortexPkg/Library/BaseCachingPciExpressLib/BaseCachingPciExpressLib.inf
+  PciCapLib|QemuQ35Pkg/Library/BasePciCapLib/BasePciCapLib.inf
+  PciCapPciSegmentLib|QemuQ35Pkg/Library/BasePciCapPciSegmentLib/BasePciCapPciSegmentLib.inf
+  PciCapPciIoLib|QemuQ35Pkg/Library/UefiPciCapPciIoLib/UefiPciCapPciIoLib.inf
 
   # USB Libraries
   UefiUsbLib|MdePkg/Library/UefiUsbLib/UefiUsbLib.inf
 
-  XenIoMmioLib|OvmfPkg/Library/XenIoMmioLib/XenIoMmioLib.inf
+  XenIoMmioLib|QemuCortexPkg/Library/XenIoMmioLib/XenIoMmioLib.inf
 
   #
   # CryptoPkg libraries needed by multiple firmware features
@@ -173,7 +173,7 @@
   SecureBootVariableProvisionLib|SecurityPkg/Library/SecureBootVariableProvisionLib/SecureBootVariableProvisionLib.inf
 
   # re-use the UserPhysicalPresent() dummy implementation from the ovmf tree
-  PlatformSecureLib|OvmfPkg/Library/PlatformSecureLib/PlatformSecureLib.inf
+  PlatformSecureLib|QemuQ35Pkg/Library/PlatformSecureLib/PlatformSecureLib.inf
 !else
   AuthVariableLib|MdeModulePkg/Library/AuthVariableLibNull/AuthVariableLibNull.inf
 !endif
@@ -386,7 +386,7 @@
     <PcdsFixedAtBuild>
       gEfiShellPkgTokenSpaceGuid.PcdShellLibAutoInitialize|FALSE
   }
-  OvmfPkg/LinuxInitrdDynamicShellCommand/LinuxInitrdDynamicShellCommand.inf {
+  QemuQ35Pkg/LinuxInitrdDynamicShellCommand/LinuxInitrdDynamicShellCommand.inf {
     <PcdsFixedAtBuild>
       gEfiShellPkgTokenSpaceGuid.PcdShellLibAutoInitialize|FALSE
   }

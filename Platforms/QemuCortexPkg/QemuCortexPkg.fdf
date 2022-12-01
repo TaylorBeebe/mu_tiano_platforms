@@ -117,7 +117,7 @@ READ_LOCK_STATUS   = TRUE
 
 !if $(TPM2_ENABLE) == TRUE
   INF MdeModulePkg/Universal/ResetSystemPei/ResetSystemPei.inf
-  INF OvmfPkg/Tcg/Tcg2Config/Tcg2ConfigPei.inf
+  INF QemuQ35Pkg/Tcg/Tcg2Config/Tcg2ConfigPei.inf
   INF SecurityPkg/Tcg/Tcg2Pei/Tcg2Pei.inf
 !endif
 

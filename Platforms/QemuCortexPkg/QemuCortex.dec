@@ -25,6 +25,11 @@
 [Includes.common]
   Include                        # Root include for the package
 
+[Ppis]
+  # PPI whose presence in the PPI database signals that the TPM base address
+  # has been discovered and recorded
+  gOvmfTpmDiscoveredPpiGuid             = {0xb9a61ad0, 0x2802, 0x41f3, {0xb5, 0x13, 0x96, 0x51, 0xce, 0x6b, 0xd5, 0x75}}
+
 [LibraryClasses]
   ArmVirtMemInfoLib|Include/Library/ArmVirtMemInfoLib.h
 
