@@ -34,7 +34,7 @@ class CommonPlatform():
     TargetsSupported = ("DEBUG", "RELEASE", "NOOPT")
     Scopes = ('qemucortex', 'edk2-build', 'cibuild')
     WorkspaceRoot = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    PackagesPath = ("Platforms", "MU_BASECORE", "Common/MU", "Common/MU_TIANO", "Common/MU_OEM_SAMPLE", "Common/PRM", "Common/MU_TIANO_ARM")
+    PackagesPath = ("Platforms", "MU_BASECORE", "Common/MU", "Common/MU_TIANO", "Common/MU_OEM_SAMPLE", "Silicon/Arm/MU_TIANO")
 
 
     # ####################################################################################### #
