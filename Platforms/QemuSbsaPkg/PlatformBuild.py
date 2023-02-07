@@ -330,40 +330,58 @@ class PlatformBuilder( UefiBuilder, BuildSettingsManager):
         shutdown_after_run = (self.env.GetValue("SHUTDOWN_AFTER_RUN", "FALSE").upper() == "TRUE")
         empty_drive = (self.env.GetValue("EMPTY_DRIVE", "FALSE").upper() == "TRUE")
         drive_path = (self.env.GetValue("DRIVE_PATH", None))
+        drive_is_shared_dir = self.env.GetValue("USE_SHARED_DIR", None)
+        if drive_is_shared_dir is not None:
+            drive_is_shared_dir = (drive_is_shared_dir.upper() == "TRUE")
         virtual_drive = None
-        drive_is_shared_dir = False
 
-        if drive_path is not None and os.path.exists(drive_path): 
-            if os.path.isdir(drive_path):
-                drive_is_shared_dir = True
+        if drive_path is not None: 
+            if not os.path.exists(drive_path):
+                logging.info("1")
+                raise Exception("DRIVE_PATH does not exist")
+            elif os.path.isdir(drive_path):
+                logging.info("2")
+                if drive_is_shared_dir != False:
+                    drive_is_shared_dir = True
+                elif drive_is_shared_dir is False:
+                    raise Exception("DRIVE_PATH is a directory, but USE_SHARED_DIR is set to FALSE")
             elif os.path.basename(drive_path).endswith(".vhd"):
-                virtual_drive = VirtualDriveManager(os.path(drive_path), self.env)
+                logging.info("3")
+                if drive_is_shared_dir != True:
+                    drive_is_shared_dir = False
+                    virtual_drive = VirtualDriveManager(drive_path, self.env)
+                else:
+                    raise Exception("DRIVE_PATH is a VHD file, but USE_SHARED_DIR is set to TRUE")
             else:
                 raise Exception("DRIVE_PATH is not a directory or a VHD file")
+        elif drive_is_shared_dir is None:
+            logging.info("4")
+            drive_is_shared_dir = False
 
-        # VHD support exists for Windows and is the default if DRIVE_PATH is not set
-        # for Linux, VHD support is not there, so a shared drive is used, which is an option for Windows if
-        # DRIVE_PATH is set
+        # VHD support exists for Windows and is the default if DRIVE_PATH and USE_SHARED_DIR are not set
         if os.name == 'nt':
             ut = UnitTestSupport(os.path.join(output_base, "X64"))
 
             if drive_path is None:
-                # Default to a VHD file for unit test support
-                virtual_drive = VirtualDriveManager(os.path.join(output_base, "VirtualDrive.vhd"), self.env)
-                drive_path = os.path.join(output_base, "VirtualDrive.vhd")
-
-            self.env.SetValue("DRIVE_PATH", drive_path, "Set drive path in case not set")
-
-            if empty_drive and os.path.exists(drive_path):
-                if not drive_is_shared_dir:
-                    os.remove(drive_path)
+                if drive_is_shared_dir:
+                    drive_path = os.path.join(output_base, "SharedDrive")
                 else:
-                    shutil.rmtree(drive_path)
+                    # Default to a VHD file for unit test support
+                    virtual_drive = VirtualDriveManager(os.path.join(output_base, "VirtualDrive.vhd"), self.env)
+                    drive_path = os.path.join(output_base, "VirtualDrive.vhd")
 
             if not os.path.exists(drive_path):
                 if drive_is_shared_dir:
-                    os.mkdir(drive_path, 0o777)
+                    os.makedirs(drive_path, 0o777)
                 else:
+                    virtual_drive.MakeDrive()
+            elif empty_drive:
+                if drive_is_shared_dir:
+                    logging.info("5")
+                    shutil.rmtree(drive_path)
+                    os.makedirs(drive_path, 0o777)
+                else:
+                    os.remove(drive_path)
                     virtual_drive.MakeDrive()
 
             test_regex = self.env.GetValue("TEST_REGEX", "")
@@ -399,16 +417,29 @@ class PlatformBuilder( UefiBuilder, BuildSettingsManager):
                 logging.warning("Linux currently isn't supported for the virtual drive. Falling back to an older method")
                 drive_is_shared_dir = True
 
-            if drive_path is None or not os.path.exists(drive_path):
+            if drive_path is None:
                 drive_path = self.env.GetValue("DRIVE_PATH", os.path.join(output_base, "SharedDrive"))
 
-            if empty_drive:
+            if not os.path.exists(drive_path):
+                os.makedirs(drive_path, 0o777)
+            elif empty_drive:
                 shutil.rmtree(drive_path)
+                os.makedirs(drive_path, 0o777)
+
+            if run_tests:
+                if test_regex == "":
+                    logging.warning("No tests specified using TEST_REGEX flag but RUN_TESTS is TRUE")
+                elif not empty_drive:
+                    logging.info("EMPTY_DRIVE=FALSE. This could impact your test results")
+
+                if not shutdown_after_run:
+                    logging.info("SHUTDOWN_AFTER_RUN=FALSE (default). XML test results will not be \
+                        displayed until after the QEMU instance ends")
 
             nshpath = os.path.join(drive_path, "startup.nsh")
-            self.env.SetValue("DRIVE_PATH", drive_path, "Set drive path in case not set")
             startup_nsh.WriteOut(nshpath, shutdown_after_run)
 
+        self.env.SetValue("DRIVE_PATH", drive_path, "Set drive path in case not set")
         ret = self.Helper.QemuRun(self.env)
         if ret != 0:
             logging.critical("Failed running Qemu")
