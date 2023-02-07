@@ -33,7 +33,7 @@ class QemuRunner(uefi_helper_plugin.IUefiHelperPlugin):
     @staticmethod
     def Runner(env):
         ''' Runs QEMU '''
-        VirtualDrive = "/home/osde/shareddir"#env.GetValue("VIRTUAL_DRIVE_PATH")
+        drive_path = env.GetValue("DRIVE_PATH")
         OutputPath_FV = os.path.join(env.GetValue("BUILD_OUTPUT_BASE"), "FV")
 
         # Check if QEMU is on the path, if not find it
@@ -44,10 +44,10 @@ class QemuRunner(uefi_helper_plugin.IUefiHelperPlugin):
         # Mount disk with either startup.nsh or OS image
         if env.GetValue("PATH_TO_OS") is not None:
             args += " -hda \"" + env.GetValue("PATH_TO_OS") + "\""
-        elif os.path.isfile(VirtualDrive):
-            args += f" -hdd {VirtualDrive}"
-        elif os.path.isdir(VirtualDrive):
-            args += f" -drive file=fat:rw:{VirtualDrive},format=raw,media=disk"
+        elif os.path.isfile(drive_path):
+            args += f" -hdd {drive_path}"
+        elif os.path.isdir(drive_path):
+            args += f" -drive file=fat:rw:{drive_path},format=raw,media=disk"
         else:
             logging.critical("Virtual Drive Path Invalid")
 
