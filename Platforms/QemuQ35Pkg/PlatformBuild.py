@@ -314,42 +314,52 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
         output_base = self.env.GetValue("BUILD_OUTPUT_BASE")
         shutdown_after_run = (self.env.GetValue("SHUTDOWN_AFTER_RUN", "FALSE").upper() == "TRUE")
         empty_drive = (self.env.GetValue("EMPTY_DRIVE", "FALSE").upper() == "TRUE")
-        SharedDirPath = self.env.GetValue("SHARED_DIR_PATH", None)
-        VirtualDriveIsSharedDir = False
-        VirtualDrivePath = self.env.GetValue("VIRTUAL_DRIVE_PATH", os.path.join(output_base, "VirtualDrive.vhd"))
-        if SharedDirPath is not None:
-            VirtualDriveIsSharedDir = True
-            VirtualDrivePath = SharedDirPath
-        else:
-            VirtualDrive = VirtualDriveManager(VirtualDrivePath, self.env)
-        
-        self.env.SetValue("VIRTUAL_DRIVE_PATH", VirtualDrivePath, "Set Virtual Drive path in case not set")
+        drive_path = (self.env.GetValue("DRIVE_PATH", None))
+        virtual_drive = None
+        drive_is_shared_dir = False
 
-        # VHD support exists for Windows and is the default if VIRTUAL_DRIVE_PATH is not set
+        if drive_path is not None and os.path.exists(drive_path): 
+            if os.path.isdir(drive_path):
+                drive_is_shared_dir = True
+            elif os.path.basename(drive_path).endswith(".vhd"):
+                virtual_drive = VirtualDriveManager(os.path(drive_path), self.env)
+            else:
+                raise Exception("DRIVE_PATH is not a directory or a VHD file")
+
+        # VHD support exists for Windows and is the default if DRIVE_PATH is not set
         # for Linux, VHD support is not there, so a shared drive is used, which is an option for Windows if
-        # VIRTUAL_DRIVE_PATH is set
-        if os.name == 'nt' or SharedDirPath is not None:
+        # DRIVE_PATH is set
+        if os.name == 'nt':
             ut = UnitTestSupport(os.path.join(output_base, "X64"))
 
-            if empty_drive:
-                if not VirtualDriveIsSharedDir:
-                    os.remove(VirtualDrivePath)
-                else:
-                    shutil.rmtree(VirtualDrivePath)
-                    os.mkdir(VirtualDrivePath, 0o777)
+            if drive_path is None:
+                # Default to a VHD file for unit test support
+                virtual_drive = VirtualDriveManager(os.path.join(output_base, "VirtualDrive.vhd"), self.env)
+                drive_path = os.path.join(output_base, "VirtualDrive.vhd")
 
-            if not VirtualDriveIsSharedDir and not os.path.isfile(VirtualDrivePath):
-                VirtualDrive.MakeDrive()
+            self.env.SetValue("DRIVE_PATH", drive_path, "Set drive path in case not set")
+
+            if empty_drive and os.path.exists(drive_path):
+                if not drive_is_shared_dir:
+                    os.remove(drive_path)
+                else:
+                    shutil.rmtree(drive_path)
+
+            if not os.path.exists(drive_path):
+                if drive_is_shared_dir:
+                    os.mkdir(drive_path, 0o777)
+                else:
+                    virtual_drive.MakeDrive()
 
             test_regex = self.env.GetValue("TEST_REGEX", "")
 
             if test_regex != "":
                 ut.set_test_regex(test_regex)
                 ut.find_tests()
-                if not VirtualDriveIsSharedDir:
-                    ut.copy_tests_to_virtual_drive(VirtualDrive)
+                if drive_is_shared_dir:
+                    ut.copy_tests_to_shared_dir(drive_path)
                 else:
-                    ut.copy_tests_to_shared_dir(VirtualDrivePath)
+                    ut.copy_tests_to_virtual_drive(virtual_drive)
 
             if run_tests:
                 if test_regex == "":
@@ -365,25 +375,23 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
             nshpath = os.path.join(output_base, "startup.nsh")
             startup_nsh.WriteOut(nshpath, shutdown_after_run)
 
-            if not VirtualDriveIsSharedDir:
-                VirtualDrive.AddFile(nshpath)
+            if drive_is_shared_dir:
+                shutil.copy(nshpath, drive_path)
             else:
-                shutil.copy(nshpath, VirtualDrivePath)
+                virtual_drive.AddFile(nshpath)
         else:
-            VirtualDrivePath = self.env.GetValue("VIRTUAL_DRIVE_PATH", os.path.join(output_base, "VirtualDrive"))
-            logging.warning("Linux currently isn't supported for the virtual drive. Falling back to an older method")
+            if not drive_is_shared_dir:
+                logging.warning("Linux currently isn't supported for the virtual drive. Falling back to an older method")
+                drive_is_shared_dir = True
 
-            if run_tests:
-                logging.critical("Linux doesn't support running unit tests due to lack of VHD support")
+            if drive_path is None or not os.path.exists(drive_path):
+                drive_path = self.env.GetValue("DRIVE_PATH", os.path.join(output_base, "SharedDrive"))
 
-            if os.path.exists(VirtualDrivePath) and empty_drive:
-                shutil.rmtree(VirtualDrivePath)
+            if empty_drive:
+                shutil.rmtree(drive_path)
 
-            if not os.path.exists(VirtualDrivePath):
-                os.makedirs(VirtualDrivePath)
-
-            nshpath = os.path.join(VirtualDrivePath, "startup.nsh")
-            self.env.SetValue("VIRTUAL_DRIVE_PATH", VirtualDrivePath, "Set Virtual Drive path in case not set")
+            nshpath = os.path.join(drive_path, "startup.nsh")
+            self.env.SetValue("DRIVE_PATH", drive_path, "Set drive path in case not set")
             startup_nsh.WriteOut(nshpath, shutdown_after_run)
 
         ret = self.Helper.QemuRun(self.env)
@@ -392,11 +400,11 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
             return ret
 
         failures = 0
-        if run_tests and SharedDirPath is not None:
-            if not VirtualDriveIsSharedDir:
-                failures = ut.report_results(VirtualDrive, VirtualDriveIsSharedDir, output_base)
+        if run_tests:
+            if not drive_is_shared_dir:
+                failures = ut.report_results(virtual_drive, drive_is_shared_dir, output_base)
             else:
-                failures = ut.report_results(VirtualDrivePath, VirtualDriveIsSharedDir, output_base)
+                failures = ut.report_results(drive_path, drive_is_shared_dir, output_base)
 
         # do stuff with unit test results here
         return failures
@@ -417,17 +425,17 @@ class UnitTestSupport(object):
             test_list.extend(glob.glob(os.path.join(self.host_efi_path, globpattern)))
         self.test_list = list(dict.fromkeys(test_list))
 
-    def copy_tests_to_virtual_drive(self, virtualdrive):
+    def copy_tests_to_virtual_drive(self, virtual_drive):
         for test in self.test_list:
-            virtualdrive.AddFile(test)
+            virtual_drive.AddFile(test)
 
-    def copy_tests_to_shared_dir(self, SharedDirPath):
+    def copy_tests_to_shared_dir(self, shared_dir_path):
         for test in self.test_list:
-            test_path = os.path.join(SharedDirPath, os.path.basename(test))
+            test_path = os.path.join(shared_dir_path, os.path.basename(test))
             if os.path.isdir(test):
                 shutil.copytree(test, test_path, dirs_exist_ok=True)
             else:
-                shutil.copy(test, SharedDirPath)
+                shutil.copy(test, shared_dir_path)
 
     def write_tests_to_startup_nsh(self,nshfile):
         for test in self.test_list:
@@ -437,14 +445,10 @@ class UnitTestSupport(object):
             if not (os.path.basename(test) in reset_tests):
                 nshfile.AddLine(os.path.basename(test))
 
-    def report_results(self, virtualdrive, VirtualDriveIsSharedDir, output_base) -> int:
+    def report_results(self, drive, drive_is_shared_dir, output_base) -> int:
         from html import unescape
 
-        report_folder_path = None
-        if not VirtualDriveIsSharedDir:
-            report_folder_path = os.path.join(os.path.dirname(virtualdrive.path_to_vhd), "unit_test_results")
-        else:
-            report_folder_path = os.path.join(output_base, "unit_test_results")
+        report_folder_path = os.path.join(output_base, "unit_test_results")
         os.makedirs(report_folder_path, exist_ok=True)
         # now parse the xml for errors
         failure_count = 0
@@ -460,12 +464,13 @@ class UnitTestSupport(object):
             xml_result_file = os.path.basename(unit_test)[:-4] + "_JUNIT.XML"
             output_xml_file = os.path.join(report_folder_path, xml_result_file)
             try:
-                if not VirtualDriveIsSharedDir:
+                if not drive_is_shared_dir:
                     xml_result_file = os.path.basename(unit_test)[:-4] + "_JUNIT.XML"
                     output_xml_file = os.path.join(report_folder_path, xml_result_file)
-                    data = virtualdrive.GetFileContent(xml_result_file, output_xml_file)
+                    logging.info("Getting file " + xml_result_file + " from virtual drive")
+                    data = drive.GetFileContent(xml_result_file, output_xml_file)
                 else:
-                    xml_result_file = os.path.join(virtualdrive, os.path.basename(unit_test)[:-4] + "_JUNIT.XML")
+                    xml_result_file = os.path.join(drive, os.path.basename(unit_test)[:-4] + "_JUNIT.XML")
                     output_xml_file = os.path.join(report_folder_path, os.path.basename(unit_test)[:-4] + "_JUNIT.XML")
                     with open(xml_result_file, 'r') as f, open(output_xml_file, 'w') as out:
                         data = f.read()
