@@ -411,6 +411,8 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
                 shutil.rmtree(drive_path)
                 os.makedirs(drive_path, 0o777)
 
+            test_regex = self.env.GetValue("TEST_REGEX", "")
+
             if run_tests:
                 if test_regex == "":
                     logging.warning("No tests specified using TEST_REGEX flag but RUN_TESTS is TRUE")
