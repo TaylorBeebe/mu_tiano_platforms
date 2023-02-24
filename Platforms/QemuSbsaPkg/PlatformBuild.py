@@ -335,7 +335,7 @@ class PlatformBuilder( UefiBuilder, BuildSettingsManager):
         if drive_is_shared_dir is not None:
             drive_is_shared_dir = (drive_is_shared_dir.upper() == "TRUE")
         virtual_drive = None
-        ut = UnitTestSupport(os.path.join(output_base, "X64"))
+        ut = UnitTestSupport(os.path.join(output_base, "AARCH64"))
         test_regex = self.env.GetValue("TEST_REGEX", "")
 
         if drive_path is not None: 
