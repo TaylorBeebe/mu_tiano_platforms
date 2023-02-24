@@ -327,6 +327,7 @@ class PlatformBuilder( UefiBuilder, BuildSettingsManager):
         startup_nsh = StartUpScriptManager()
         run_tests = (self.env.GetValue("RUN_TESTS", "FALSE").upper() == "TRUE")
         output_base = self.env.GetValue("BUILD_OUTPUT_BASE")
+        nshpath = os.path.join(output_base, "startup.nsh")
         shutdown_after_run = (self.env.GetValue("SHUTDOWN_AFTER_RUN", "FALSE").upper() == "TRUE")
         empty_drive = (self.env.GetValue("EMPTY_DRIVE", "FALSE").upper() == "TRUE")
         drive_path = (self.env.GetValue("DRIVE_PATH", None))
@@ -334,19 +335,18 @@ class PlatformBuilder( UefiBuilder, BuildSettingsManager):
         if drive_is_shared_dir is not None:
             drive_is_shared_dir = (drive_is_shared_dir.upper() == "TRUE")
         virtual_drive = None
+        ut = UnitTestSupport(os.path.join(output_base, "X64"))
+        test_regex = self.env.GetValue("TEST_REGEX", "")
 
         if drive_path is not None: 
             if not os.path.exists(drive_path):
-                logging.info("1")
                 raise Exception("DRIVE_PATH does not exist")
             elif os.path.isdir(drive_path):
-                logging.info("2")
                 if drive_is_shared_dir != False:
                     drive_is_shared_dir = True
                 elif drive_is_shared_dir is False:
                     raise Exception("DRIVE_PATH is a directory, but USE_SHARED_DIR is set to FALSE")
             elif os.path.basename(drive_path).endswith(".vhd"):
-                logging.info("3")
                 if drive_is_shared_dir != True:
                     drive_is_shared_dir = False
                     virtual_drive = VirtualDriveManager(drive_path, self.env)
@@ -355,12 +355,10 @@ class PlatformBuilder( UefiBuilder, BuildSettingsManager):
             else:
                 raise Exception("DRIVE_PATH is not a directory or a VHD file")
         elif drive_is_shared_dir is None:
-            logging.info("4")
             drive_is_shared_dir = False
 
         # VHD support exists for Windows and is the default if DRIVE_PATH and USE_SHARED_DIR are not set
         if os.name == 'nt':
-            ut = UnitTestSupport(os.path.join(output_base, "X64"))
 
             if drive_path is None:
                 if drive_is_shared_dir:
@@ -377,14 +375,11 @@ class PlatformBuilder( UefiBuilder, BuildSettingsManager):
                     virtual_drive.MakeDrive()
             elif empty_drive:
                 if drive_is_shared_dir:
-                    logging.info("5")
                     shutil.rmtree(drive_path)
                     os.makedirs(drive_path, 0o777)
                 else:
                     os.remove(drive_path)
                     virtual_drive.MakeDrive()
-
-            test_regex = self.env.GetValue("TEST_REGEX", "")
 
             if test_regex != "":
                 ut.set_test_regex(test_regex)
@@ -404,17 +399,9 @@ class PlatformBuilder( UefiBuilder, BuildSettingsManager):
                     logging.info("SHUTDOWN_AFTER_RUN=FALSE (default). XML test results will not be \
                         displayed until after the QEMU instance ends")
                 ut.write_tests_to_startup_nsh(startup_nsh)
-
-            nshpath = os.path.join(output_base, "startup.nsh")
-            startup_nsh.WriteOut(nshpath, shutdown_after_run)
-
-            if drive_is_shared_dir:
-                shutil.copy(nshpath, drive_path)
-            else:
-                virtual_drive.AddFile(nshpath)
         else:
             if not drive_is_shared_dir:
-                logging.warning("Linux currently isn't supported for the virtual drive. Falling back to an older method")
+                logging.warning("Linux currently isn't supported for the virtual drive, using shared directory instead.")
                 drive_is_shared_dir = True
 
             if drive_path is None:
@@ -426,6 +413,11 @@ class PlatformBuilder( UefiBuilder, BuildSettingsManager):
                 shutil.rmtree(drive_path)
                 os.makedirs(drive_path, 0o777)
 
+            if test_regex != "":
+                ut.set_test_regex(test_regex)
+                ut.find_tests()
+                ut.copy_tests_to_shared_dir(drive_path)
+
             if run_tests:
                 if test_regex == "":
                     logging.warning("No tests specified using TEST_REGEX flag but RUN_TESTS is TRUE")
@@ -435,9 +427,14 @@ class PlatformBuilder( UefiBuilder, BuildSettingsManager):
                 if not shutdown_after_run:
                     logging.info("SHUTDOWN_AFTER_RUN=FALSE (default). XML test results will not be \
                         displayed until after the QEMU instance ends")
+                ut.write_tests_to_startup_nsh(startup_nsh)
 
-            nshpath = os.path.join(drive_path, "startup.nsh")
-            startup_nsh.WriteOut(nshpath, shutdown_after_run)
+        startup_nsh.WriteOut(nshpath, shutdown_after_run)
+
+        if drive_is_shared_dir:
+            shutil.copy(nshpath, drive_path)
+        else:
+            virtual_drive.AddFile(nshpath)
 
         self.env.SetValue("DRIVE_PATH", drive_path, "Set drive path in case not set")
         ret = self.Helper.QemuRun(self.env)
