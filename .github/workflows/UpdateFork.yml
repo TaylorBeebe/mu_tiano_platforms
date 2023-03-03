@@ -1,0 +1,20 @@
+name: Merge upstream branches
+on:
+  schedule:
+    - cron:  '30 5,17 * * *'
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Merge Upstream
+        run: |
+          git config --global user.name 'Taylor Beebe'
+          git config --global user.email 'taylor.d.beebe@gmail.com'
+
+          git remote add upstream https://github.com/microsoft/mu_tiano_platforms.git
+          git fetch upstream
+
+          git checkout origin/main
+          git merge --no-edit upstream/main
+          git push origin main
