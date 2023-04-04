@@ -252,7 +252,7 @@ class PlatformBuilder(UefiBuilder, BuildSettingsManager):
         txt  == plain text file logging
         md   == markdown file logging
         '''
-        return logging.INFO
+        return logging.DEBUG
         return super().GetLoggingLevel(loggerType)
 
     def SetPlatformEnv(self):

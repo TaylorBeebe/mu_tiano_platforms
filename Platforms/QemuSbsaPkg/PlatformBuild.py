@@ -263,62 +263,62 @@ class PlatformBuilder( UefiBuilder, BuildSettingsManager):
             fd.write(patchImage)
         return 0
 
-    def PlatformPostBuild(self):
-        # Add a post build step to build BL31 and assemble the FD files
-        op_fv = os.path.join(self.env.GetValue("BUILD_OUTPUT_BASE"), "FV")
+    # def PlatformPostBuild(self):
+    #     # Add a post build step to build BL31 and assemble the FD files
+    #     op_fv = os.path.join(self.env.GetValue("BUILD_OUTPUT_BASE"), "FV")
 
-        logging.info("Building TF-A")
-        cmd = "make"
-        args = "CROSS_COMPILE=" + shell_environment.GetEnvironment().get_shell_var("GCC5_AARCH64_PREFIX")
-        args += " PLAT=" + self.env.GetValue("QEMU_PLATFORM").lower()
-        args += " ARCH=" + self.env.GetValue("TARGET_ARCH").lower()
-        args += " DEBUG=" + str(1 if self.env.GetValue("TARGET").lower() == 'debug' else 0)
-        args += " SPM_MM=1 EL3_EXCEPTION_HANDLING=1"
-        args += " BL32=" + os.path.join(op_fv, "BL32_AP_MM.fd")
-        args += " all fip"
-        args += " -j $(nproc)"
-        ret = RunCmd(cmd, args, workingdir= self.env.GetValue("ARM_TFA_PATH"))
-        if ret != 0:
-            return ret
+    #     logging.info("Building TF-A")
+    #     cmd = "make"
+    #     args = "CROSS_COMPILE=" + shell_environment.GetEnvironment().get_shell_var("GCC5_AARCH64_PREFIX")
+    #     args += " PLAT=" + self.env.GetValue("QEMU_PLATFORM").lower()
+    #     args += " ARCH=" + self.env.GetValue("TARGET_ARCH").lower()
+    #     args += " DEBUG=" + str(1 if self.env.GetValue("TARGET").lower() == 'debug' else 0)
+    #     args += " SPM_MM=1 EL3_EXCEPTION_HANDLING=1"
+    #     args += " BL32=" + os.path.join(op_fv, "BL32_AP_MM.fd")
+    #     args += " all fip"
+    #     args += " -j $(nproc)"
+    #     ret = RunCmd(cmd, args, workingdir= self.env.GetValue("ARM_TFA_PATH"))
+    #     if ret != 0:
+    #         return ret
 
-        # Now that BL31 is built with BL32 supplied, patch BL1 and BL31 built fip.bin into the SECURE_FLASH0.fd
-        op_tfa = os.path.join (
-            self.env.GetValue("ARM_TFA_PATH"), "build",
-            self.env.GetValue("QEMU_PLATFORM").lower(),
-            self.env.GetValue("TARGET").lower())
+    #     # Now that BL31 is built with BL32 supplied, patch BL1 and BL31 built fip.bin into the SECURE_FLASH0.fd
+    #     op_tfa = os.path.join (
+    #         self.env.GetValue("ARM_TFA_PATH"), "build",
+    #         self.env.GetValue("QEMU_PLATFORM").lower(),
+    #         self.env.GetValue("TARGET").lower())
 
-        logging.info("Patching BL1 region")
-        print (self.env.GetValue("SECURE_FLASH_REGION_BL1_OFFSET"))
-        self.PatchRegion(
-            os.path.join(op_fv, "SECURE_FLASH0.fd"),
-            int(self.env.GetValue("SECURE_FLASH_REGION_BL1_OFFSET"), 16),
-            int( self.env.GetValue("SECURE_FLASH_REGION_BL1_SIZE"), 16),
-            os.path.join(op_tfa, "bl1.bin"),
-            )
+    #     logging.info("Patching BL1 region")
+    #     print (self.env.GetValue("SECURE_FLASH_REGION_BL1_OFFSET"))
+    #     self.PatchRegion(
+    #         os.path.join(op_fv, "SECURE_FLASH0.fd"),
+    #         int(self.env.GetValue("SECURE_FLASH_REGION_BL1_OFFSET"), 16),
+    #         int( self.env.GetValue("SECURE_FLASH_REGION_BL1_SIZE"), 16),
+    #         os.path.join(op_tfa, "bl1.bin"),
+    #         )
 
-        logging.info("Patching FIP region")
-        self.PatchRegion(
-            os.path.join(op_fv, "SECURE_FLASH0.fd"),
-            int(self.env.GetValue("SECURE_FLASH_REGION_FIP_OFFSET"), 16),
-            int( self.env.GetValue("SECURE_FLASH_REGION_FIP_SIZE"), 16),
-            os.path.join(op_tfa, "fip.bin")
-            )
+    #     logging.info("Patching FIP region")
+    #     self.PatchRegion(
+    #         os.path.join(op_fv, "SECURE_FLASH0.fd"),
+    #         int(self.env.GetValue("SECURE_FLASH_REGION_FIP_OFFSET"), 16),
+    #         int( self.env.GetValue("SECURE_FLASH_REGION_FIP_SIZE"), 16),
+    #         os.path.join(op_tfa, "fip.bin")
+    #         )
 
-        # Pad both fd to 256mb, as required by QEMU
-        OutputPath_FV = os.path.join(self.env.GetValue("BUILD_OUTPUT_BASE"), "FV")
-        Built_FV = os.path.join(OutputPath_FV, "QEMU_EFI.fd")
-        with open(Built_FV, "ab") as fvfile:
-            fvfile.seek(0, os.SEEK_END)
-            additional = b'\0' * ((256 * 1024 * 1024)-fvfile.tell())
-            fvfile.write(additional)
+    #     # Pad both fd to 256mb, as required by QEMU
+    #     OutputPath_FV = os.path.join(self.env.GetValue("BUILD_OUTPUT_BASE"), "FV")
+    #     Built_FV = os.path.join(OutputPath_FV, "QEMU_EFI.fd")
+    #     with open(Built_FV, "ab") as fvfile:
+    #         fvfile.seek(0, os.SEEK_END)
+    #         additional = b'\0' * ((256 * 1024 * 1024)-fvfile.tell())
+    #         fvfile.write(additional)
 
-        bl3 = os.path.join(OutputPath_FV, "SECURE_FLASH0.fd")
-        with open(bl3, "ab") as fvfile:
-            fvfile.seek(0, os.SEEK_END)
-            additional = b'\0' * ((256 * 1024 * 1024)-fvfile.tell())
-            fvfile.write(additional)
+    #     bl3 = os.path.join(OutputPath_FV, "SECURE_FLASH0.fd")
+    #     with open(bl3, "ab") as fvfile:
+    #         fvfile.seek(0, os.SEEK_END)
+    #         additional = b'\0' * ((256 * 1024 * 1024)-fvfile.tell())
+    #         fvfile.write(additional)
 
-        return 0
+    #     return 0
 
     def __SetEsrtGuidVars(self, var_name, guid_str, desc_string):
         cur_guid = uuid.UUID(guid_str)

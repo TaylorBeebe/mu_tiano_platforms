@@ -350,7 +350,7 @@ READ_LOCK_STATUS   = TRUE
   #
   # EBC support
   #
-  INF MdeModulePkg/Universal/EbcDxe/EbcDxe.inf
+  # INF MdeModulePkg/Universal/EbcDxe/EbcDxe.inf
 
   #
   # Standalone MM drivers in non-secure world
@@ -471,7 +471,7 @@ READ_STATUS        = TRUE
 READ_LOCK_CAP      = TRUE
 READ_LOCK_STATUS   = TRUE
 
-  INF ArmPlatformPkg/PrePeiCore/PrePeiCoreUniCore.inf
+  # INF ArmPlatformPkg/PrePeiCore/PrePeiCoreUniCore.inf
   INF MdeModulePkg/Core/Pei/PeiMain.inf
   INF ArmPlatformPkg/PlatformPei/PlatformPeim.inf
   INF ArmPlatformPkg/MemoryInitPei/MemoryInitPeim.inf
@@ -484,7 +484,7 @@ READ_LOCK_STATUS   = TRUE
   INF MsGraphicsPkg/MsEarlyGraphics/Pei/MsEarlyGraphics.inf
   INF MdeModulePkg/Core/DxeIplPeim/DxeIpl.inf
   INF MsCorePkg/Core/GuidedSectionExtractPeim/GuidedSectionExtract.inf
-  INF MsWheaPkg/MsWheaReport/Pei/MsWheaReportPei.inf
+  # INF MsWheaPkg/MsWheaReport/Pei/MsWheaReportPei.inf
   INF OemPkg/DeviceStatePei/DeviceStatePei.inf
   INF MfciPkg/MfciPei/MfciPei.inf
 

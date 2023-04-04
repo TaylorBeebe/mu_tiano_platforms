@@ -18,7 +18,8 @@
 [Sources]
   SbsaQemuMem.c
   SbsaQemuLib.c
-  SbsaQemuHelper.S
+  SbsaQemuHelper.S | GCC
+  SbsaQemuHelper.asm | MSFT
 
 [Packages]
   ArmPkg/ArmPkg.dec
