@@ -600,6 +600,11 @@
   gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel|$(DEBUG_PRINT_ERROR_LEVEL)
 !endif
 
+# Set unit test mode to active if BUILD_UNIT_TESTS=TRUE (default)
+!if $(BUILD_UNIT_TESTS) == TRUE
+  gEfiMdePkgTokenSpaceGuid.PcdUnitTestModeActive|TRUE
+!endif
+
   #
   # Optional feature to help prevent EFI memory map fragments
   # Turned on and off via: PcdPrePiProduceMemoryTypeInformationHob
@@ -848,11 +853,6 @@
   #
   gEfiNetworkPkgTokenSpaceGuid.PcdIPv4PXESupport|0x01
   gEfiNetworkPkgTokenSpaceGuid.PcdIPv6PXESupport|0x01
-
-  # Add DEVICE_STATE_UNIT_TEST_MODE to the device state bitmask if BUILD_UNIT_TESTS=TRUE (default)
-  !if $(BUILD_UNIT_TESTS) == TRUE
-    gEfiMdeModulePkgTokenSpaceGuid.PcdDeviceStateBitmask|0x20
-  !endif
 
   #
   # TPM2 support

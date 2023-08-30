@@ -690,6 +690,11 @@
   gAdvLoggerPkgTokenSpaceGuid.PcdAdvancedFileLoggerFlush|3
   gEfiSecurityPkgTokenSpaceGuid.PcdUserPhysicalPresence|FALSE
 
+# Set unit test mode to active if BUILD_UNIT_TESTS=TRUE (default)
+!if $(BUILD_UNIT_TESTS) == TRUE
+  gEfiMdePkgTokenSpaceGuid.PcdUnitTestModeActive|TRUE
+!endif
+
 !if $(NETWORK_TLS_ENABLE) == FALSE
   # match PcdFlashNvStorageVariableSize purely for convenience
   gEfiMdeModulePkgTokenSpaceGuid.PcdVariableStoreSize|0x40000
@@ -896,11 +901,6 @@
 
   # Set ConfidentialComputing defaults
   gEfiMdePkgTokenSpaceGuid.PcdConfidentialComputingGuestAttr|0
-
-  # Add DEVICE_STATE_UNIT_TEST_MODE to the device state bitmask if BUILD_UNIT_TESTS=TRUE (default)
-  !if $(BUILD_UNIT_TESTS) == TRUE
-    gEfiMdeModulePkgTokenSpaceGuid.PcdDeviceStateBitmask|0x20
-  !endif
 
 [PcdsDynamicHii]
 !if $(TPM_ENABLE) == TRUE && $(TPM_CONFIG_ENABLE) == TRUE

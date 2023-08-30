@@ -28,7 +28,6 @@ from io import StringIO
 
 # Declare test whose failure will not return a non-zero exit code
 FAILURE_EXEMPT_TESTS = {
-    "VariablePolicyFuncTestApp.efi": datetime.datetime(2023, 7, 20, 0, 0, 0),
 }
 
 # Allow failure exempt tests to be ignored for 90 days
