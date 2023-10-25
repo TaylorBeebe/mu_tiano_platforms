@@ -144,10 +144,10 @@ FV = SECFV
 
 [FD.MEMFD]
 BaseAddress   = $(MEMFD_BASE_ADDRESS)
-Size          = 0xD00000
+Size          = 0xE00000
 ErasePolarity = 1
 BlockSize     = 0x10000
-NumBlocks     = 0xD0
+NumBlocks     = 0xE0
 
 0x000000|0x006000
 gUefiQemuQ35PkgTokenSpaceGuid.PcdOvmfSecPageTablesBase|gUefiQemuQ35PkgTokenSpaceGuid.PcdOvmfSecPageTablesSize
@@ -165,7 +165,7 @@ gUefiQemuQ35PkgTokenSpaceGuid.PcdSecPeiTemporaryRamBase|gUefiQemuQ35PkgTokenSpac
 gUefiQemuQ35PkgTokenSpaceGuid.PcdOvmfPeiMemFvBase|gUefiQemuQ35PkgTokenSpaceGuid.PcdOvmfPeiMemFvSize
 FV = PEIFV
 
-0x100000|0xC00000
+0x100000|0xD00000
 gUefiQemuQ35PkgTokenSpaceGuid.PcdOvmfDxeMemFvBase|gUefiQemuQ35PkgTokenSpaceGuid.PcdOvmfDxeMemFvSize
 FV = DXEFV
 

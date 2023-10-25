@@ -186,7 +186,7 @@
 
   # Security Libraries
   SecurityManagementLib |MdeModulePkg/Library/DxeSecurityManagementLib/DxeSecurityManagementLib.inf
-  BaseBinSecurityLib    |MdePkg/Library/BaseBinSecurityLibNull/BaseBinSecurityLibNull.inf
+  # BaseBinSecurityLib    |MdePkg/Library/BaseBinSecurityLibNull/BaseBinSecurityLibNull.inf
   SecurityLockAuditLib  |MdeModulePkg/Library/SecurityLockAuditDebugMessageLib/SecurityLockAuditDebugMessageLib.inf ##MU_CHANGE
   LockBoxLib            |QemuPkg/Library/LockBoxLib/LockBoxBaseLib.inf
   PlatformSecureLib     |SecurityPkg/Library/PlatformSecureLibNull/PlatformSecureLibNull.inf
@@ -306,17 +306,24 @@
 
   PlatformSmmProtectionsTestLib|UefiTestingPkg/Library/PlatformSmmProtectionsTestLibNull/PlatformSmmProtectionsTestLibNull.inf
   FmpDependencyLib|FmpDevicePkg/Library/FmpDependencyLib/FmpDependencyLib.inf
+  StackCheckFailureHandlerLib|MdePkg/Library/StackCheckFailureHandlerLib/StackCheckFailureHandlerLib.inf
 
-##MSCHANGE Begin
-!if $(TOOL_CHAIN_TAG) == VS2019 or $(TOOL_CHAIN_TAG) == VS2022
-[LibraryClasses.X64, LibraryClasses.IA32]
-  #if debug is enabled provide StackCookie support lib so that we can link to /GS exports on MSVC
-  RngLib|MdePkg/Library/BaseRngLib/BaseRngLib.inf
+# ##MSCHANGE Begin
+# !if $(TOOL_CHAIN_TAG) == VS2019 or $(TOOL_CHAIN_TAG) == VS2022
+# [LibraryClasses.X64, LibraryClasses.IA32]
+#   #if debug is enabled provide StackCookie support lib so that we can link to /GS exports on MSVC
+#   RngLib|MdePkg/Library/BaseRngLib/BaseRngLib.inf
+# [LibraryClasses.X64]
+#   BaseBinSecurityLib|MdePkg/Library/BaseBinSecurityLibRng/BaseBinSecurityLibRng.inf
+#   NULL|MdePkg/Library/BaseBinSecurityLibRng/BaseBinSecurityLibRng.inf
+# !endif
+# ##MSCHANGE End
+# [LibraryClasses.IA32]
+#   StackCheckLib|MdePkg/Library/StackCheckLibNull/StackCheckLibNull.inf
+  # NULL|MdePkg/Library/StackCheckLibNull/StackCheckLibNull.inf
+# [LibraryClasses.common.DXE_CORE, LibraryClasses.common.DXE_RUNTIME_DRIVER, LibraryClasses.common.UEFI_DRIVER, LibraryClasses.common.DXE_DRIVER, LibraryClasses.common.UEFI_APPLICATION, LibraryClasses.common.DXE_SMM_DRIVER, LibraryClasses.common.SMM_CORE, LibraryClasses.common.MM_STANDALONE, LibraryClasses.common.MM_CORE_STANDALONE, LibraryClasses.common.PEIM, LibraryClasses.common.PEI_CORE]
 [LibraryClasses.X64]
-  BaseBinSecurityLib|MdePkg/Library/BaseBinSecurityLibRng/BaseBinSecurityLibRng.inf
-  NULL|MdePkg/Library/BaseBinSecurityLibRng/BaseBinSecurityLibRng.inf
-!endif
-##MSCHANGE End
+  NULL|MdePkg/Library/StackCheckLib/StackCheckLib.inf
 
 #SHARED_CRYPTO
 !if $(ENABLE_SHARED_CRYPTO) == FALSE
@@ -417,7 +424,7 @@
   PeiServicesLib             |MdePkg/Library/PeiServicesLib/PeiServicesLib.inf
   MemoryAllocationLib        |MdePkg/Library/PeiMemoryAllocationLib/PeiMemoryAllocationLib.inf
   ReportStatusCodeLib        |MdeModulePkg/Library/PeiReportStatusCodeLib/PeiReportStatusCodeLib.inf
-  RngLib                     |MdePkg/Library/BaseRngLibNull/BaseRngLibNull.inf
+  RngLib                     |MdePkg/Library/BaseRngLib/BaseRngLib.inf
   MemEncryptSevLib           |QemuQ35Pkg/Library/BaseMemEncryptSevLib/PeiMemEncryptSevLib.inf
 
 [LibraryClasses.common.PEI_CORE]
@@ -544,7 +551,7 @@
   MmServicesTableLib|MdePkg/Library/MmServicesTableLib/MmServicesTableLib.inf
   SmmServicesTableLib|MdePkg/Library/SmmServicesTableLib/SmmServicesTableLib.inf
   CpuExceptionHandlerLib|UefiCpuPkg/Library/CpuExceptionHandlerLib/SmmCpuExceptionHandlerLib.inf
-  RngLib|MdePkg/Library/BaseRngLibNull/BaseRngLibNull.inf
+  RngLib|MdePkg/Library/BaseRngLib/BaseRngLib.inf
   LockBoxLib|MdeModulePkg/Library/SmmLockBoxLib/SmmLockBoxSmmLib.inf
   AdvLoggerAccessLib|AdvLoggerPkg/Library/AdvLoggerSmmAccessLib/AdvLoggerSmmAccessLib.inf
 !if $(SOURCE_DEBUG_ENABLE) == TRUE
@@ -592,7 +599,7 @@
   IntrinsicLib|CryptoPkg/Library/IntrinsicLib/IntrinsicLib.inf
   AdvLoggerAccessLib|MdeModulePkg/Library/AdvLoggerAccessLibNull/AdvLoggerAccessLib.inf
   DevicePathLib|MdePkg/Library/UefiDevicePathLib/UefiDevicePathLibStandaloneMm.inf
-  RngLib|MdePkg/Library/BaseRngLibNull/BaseRngLibNull.inf
+  RngLib|MdePkg/Library/BaseRngLib/BaseRngLib.inf
   PciLib|QemuQ35Pkg/Library/DxePciLibI440FxQ35/DxePciLibI440FxQ35.inf
 
   BaseLib|MmSupervisorPkg/Library/BaseLibSysCall/BaseLib.inf
@@ -727,7 +734,7 @@
   # DEBUG_VERBOSE   0x00400000  // Detailed debug messages that may
   #                             // significantly impact boot performance
   # DEBUG_ERROR     0x80000000  // Error
-   gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel|0x80080246
+   gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel|0x80480246
   #gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel|0x800002CF # use when debugging depex loading issues
   gEfiMdePkgTokenSpaceGuid.PcdFixedDebugPrintErrorLevel|gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel
 
