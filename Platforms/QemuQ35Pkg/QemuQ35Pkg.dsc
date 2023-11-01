@@ -734,7 +734,7 @@
   # DEBUG_VERBOSE   0x00400000  // Detailed debug messages that may
   #                             // significantly impact boot performance
   # DEBUG_ERROR     0x80000000  // Error
-   gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel|0x80480246
+   gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel|0x80080246
   #gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel|0x800002CF # use when debugging depex loading issues
   gEfiMdePkgTokenSpaceGuid.PcdFixedDebugPrintErrorLevel|gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel
 
@@ -1206,7 +1206,7 @@ QemuQ35Pkg/Library/ResetSystemLib/StandaloneMmResetSystemLib.inf
   QemuQ35Pkg/QemuVideoDxe/QemuVideoDxe.inf
 
 
-  QemuQ35Pkg/QemuRamfbDxe/QemuRamfbDxe.inf
+  # QemuQ35Pkg/QemuRamfbDxe/QemuRamfbDxe.inf
 
   #
   # ISA Support
